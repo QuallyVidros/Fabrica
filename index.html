@@ -1231,42 +1231,45 @@ async function handleLoginSubmit(event) {
         }
 
        function updateItemStatus(osId, stageId, itemId, newStatus) {
-             if (currentUser && currentUser.nivel === 3) {
-                showToast("Seu usuário tem apenas permissão de visualização.", "error");
-                return;
-            }
-        
-            const os = osDatabase.find(x => x.id === osId);
-            if (!os) return;
-        
-            const stage = os.stages.find(s => s.id === stageId);
-            if (!stage) return;
-        
-            const item = stage.items.find(i => i.id === itemId);
-            if (!item) return;
-        
-            item.status = newStatus;
-            
-            // Obtém o nome do usuário logado no momento
-            const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
-        
-            if (newStatus === 'completed') {
-                item.completedAt = new Date().toLocaleString('pt-BR');
-                item.completedBy = userName; // Registro individual do item
-                
-                // Se todas as etapas da OS forem concluídas, registra quem finalizou a OS inteira
-                const { pct } = calculateOSProgress(os);
-                if (pct === 100) {
-                    os.completedBy = userName;
+                if (currentUser && currentUser.nivel === 3) {
+                    showToast("Seu usuário tem apenas permissão de visualização.", "error");
+                    return;
                 }
-            } else {
-                item.completedAt = null;
-                item.completedBy = null;
+            
+                const os = osDatabase.find(x => x.id === osId);
+                if (!os) return;
+            
+                const stage = os.stages.find(s => s.id === stageId);
+                if (!stage) return;
+            
+                const item = stage.items.find(i => i.id === itemId);
+                if (!item) return;
+            
+                item.status = newStatus;
+                
+                const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
+            
+                if (newStatus === 'completed') {
+                    item.completedAt = new Date().toLocaleString('pt-BR');
+                    item.completedBy = userName;
+                    
+                    const { pct } = calculateOSProgress(os);
+                    if (pct === 100) {
+                        os.completedBy = userName;
+                    }
+                } else {
+                    item.completedAt = null;
+                    item.completedBy = null;
+                }
+            
+                // Salva no LocalStorage do navegador
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
+            
+                // MANDA APENAS A OS ATUALIZADA PARA O GOOGLE SHEETS
+                pushToGoogleSheets(os);
+            
+                renderDetailsView();
             }
-        
-            saveToStorage();
-            renderDetailsView();
-        }
 
         function renderReportsView() {
             const tbody = document.getElementById('reportTableBody');
@@ -1386,59 +1389,69 @@ async function handleLoginSubmit(event) {
             document.getElementById('newOSModal').classList.add('hidden');
         }
 
-        function handleCreateOS(event) {
-            event.preventDefault();
+function handleCreateOS(event) {
+    event.preventDefault();
 
-            if (currentUser && currentUser.nivel !== 1) {
-                showToast("Operação não permitida.", "error");
-                return;
-            }
+    if (currentUser && currentUser.nivel !== 1) {
+        showToast("Operação não permitida.", "error");
+        return;
+    }
 
-            const osNumber = document.getElementById('osNumberInput').value.trim();
-            const clientName = document.getElementById('clientNameInput').value.trim();
-            const city = document.getElementById('cityInput').value.trim();
-            const deliveryDate = document.getElementById('deliveryDateInput').value;
-            const seller = document.getElementById('sellerInput').value.trim();
-            const inChargeProduction = document.getElementById('inchargeProdInput').value.trim();
-            const inChargeAssembly = document.getElementById('inchargeAssemblyInput').value.trim();
+    const osNumber = document.getElementById('osNumberInput').value.trim();
+    const clientName = document.getElementById('clientNameInput').value.trim();
+    const city = document.getElementById('cityInput').value.trim();
+    const deliveryDate = document.getElementById('deliveryDateInput').value;
+    const seller = document.getElementById('sellerInput').value.trim();
+    const inChargeProduction = document.getElementById('inchargeProdInput').value.trim();
+    const inChargeAssembly = document.getElementById('inchargeAssemblyInput').value.trim();
 
-            const newOS = {
-                id: 'os_' + Date.now(),
-                osNumber,
-                clientName,
-                city,
-                deliveryDate,
-                seller,
-                inChargeProduction,
-                inChargeAssembly,
-                createdAt: new Date().toISOString().split('T')[0],
-                completedAt: null,
-                stages: JSON.parse(JSON.stringify(STAGES_TEMPLATE))
-            };
+    const newOS = {
+        id: 'os_' + Date.now(),
+        osNumber,
+        clientName,
+        city,
+        deliveryDate,
+        seller,
+        inChargeProduction,
+        inChargeAssembly,
+        createdAt: new Date().toISOString().split('T')[0],
+        completedAt: null,
+        stages: JSON.parse(JSON.stringify(STAGES_TEMPLATE))
+    };
 
-            osDatabase.unshift(newOS);
-            saveToStorage();
-            closeNewOSModal();
-            showToast("Nova Ordem de Serviço cadastrada com sucesso!", "success");
+    osDatabase.unshift(newOS);
 
-            if (currentView === 'home') renderHomeView();
-            else navigateTo('home');
-        }
+    // 1. Salva localmente no navegador
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
 
-        function confirmDeleteOS(osId) {
+    // 2. ENVIA APENAS A NOVA OS PARA O GOOGLE SHEETS
+    pushToGoogleSheets(newOS);
+
+    closeNewOSModal();
+    showToast("Nova Ordem de Serviço cadastrada com sucesso!", "success");
+
+    if (currentView === 'home') renderHomeView();
+    else navigateTo('home');
+}
+
+     function confirmDeleteOS(osId) {
             if (currentUser && currentUser.nivel !== 1) {
                 showToast("Apenas o Administrador pode excluir Ordens de Serviço.", "error");
                 return;
             }
-
+        
             showConfirmModal("Tem certeza que deseja excluir esta Ordem de Serviço?", () => {
+                // 1. Remove do banco de dados local
                 osDatabase = osDatabase.filter(x => x.id !== osId);
-                saveToStorage();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
+        
+                // 2. ENVIA A AÇÃO DE DELETAR A LINHA NO GOOGLE SHEETS
+                pushToGoogleSheets({ id: osId }, true);
+        
                 showToast("Ordem de Serviço excluída.", "info");
                 navigateTo('home');
             });
         }
-
         function openAddItemModal(osId, stageId) {
             if (currentUser && currentUser.nivel === 3) {
                 showToast("Visualizadores não podem alterar itens.", "error");
@@ -1522,7 +1535,7 @@ async function handleLoginSubmit(event) {
                 if (googleSheetsScriptUrl && !isSyncing) {
                     await pullFromGoogleSheets(true);
                 }
-            }, 10000);
+            }, 5000); // 5000ms = 5 segundos
         }
 
         function openSheetsModal() {
@@ -1561,19 +1574,32 @@ async function handleLoginSubmit(event) {
             showToast("Desconectado do Google Sheets.", "info");
         }
 
-        async function pushToGoogleSheets() {
+         async function pushToGoogleSheets(targetOS = null, deleteAction = false) {
             if (!googleSheetsScriptUrl || isSyncing) return;
-
+        
             try {
                 isSyncing = true;
-                const payload = JSON.stringify(osDatabase);
-
+                let payload;
+        
+                if (deleteAction && targetOS) {
+                    // Caso seja uma exclusão, envia a ação e o ID correspondente
+                    payload = { action: 'delete', id: targetOS.id || targetOS };
+                } else if (targetOS) {
+                    // Envia apenas o objeto da OS criada ou modificada
+                    payload = targetOS;
+                } else {
+                    // Fallback: se chamada sem parâmetros, envia a lista inteira
+                    payload = osDatabase;
+                }
+        
                 await fetch(googleSheetsScriptUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: payload
+                    body: JSON.stringify(payload)
                 });
+        
+                console.log("Sincronização com Google Sheets realizada.");
             } catch (err) {
                 console.warn("Erro ao enviar para Google Sheets:", err.message);
             } finally {
