@@ -528,7 +528,7 @@
         const STORAGE_KEY = 'VIDROS_ESQUADRIAS_PROCESS_DATA_V3';
         const SHEETS_URL_KEY = 'VIDROS_ESQUADRIAS_SHEETS_SCRIPT_URL';
         const USER_SESSION_KEY = 'VIDROS_ESQUADRIAS_USER_SESSION';
-        const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwMinZ2-JeuMJQuw3TevH6HzjCDsyF9e9yCebulOvKN_8Hytpa99qle0XfipkdufV2y/exec';
+        const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzamSdTeWFlXKeBOp-9gPETo8HsurYUv7J4Z7jNs-OowicYhvfQFyyv48d5eFvxVKLo/exec';
 
         const STAGES_TEMPLATE = [
             {
@@ -1582,40 +1582,46 @@ async function handleLoginSubmit(event) {
         }
 
         async function pullFromGoogleSheets(isSilent = false) {
-            if (!googleSheetsScriptUrl || isSyncing) return false;
-
-            try {
-                isSyncing = true;
-                const response = await fetch(googleSheetsScriptUrl);
-                if (response.ok) {
-                    const remoteData = await response.json();
-                    if (Array.isArray(remoteData)) {
-                        const remoteJson = JSON.stringify(remoteData);
-                        const localJson = JSON.stringify(osDatabase);
-
-                        if (remoteJson !== localJson) {
+                if (!googleSheetsScriptUrl || isSyncing) return false;
+            
+                try {
+                    isSyncing = true;
+                    
+                    // redirect: 'follow' e cache: 'no-store' garantem que o celular não use dados velhos
+                    const response = await fetch(googleSheetsScriptUrl, {
+                        method: 'GET',
+                        redirect: 'follow',
+                        cache: 'no-store'
+                    });
+            
+                    if (response.ok) {
+                        const remoteData = await response.json();
+                        if (Array.isArray(remoteData)) {
                             osDatabase = remoteData;
+                            
+                            // Salva a cópia mais recente no celular
                             localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
-
+            
                             if (!isSilent) {
-                                showToast("Dados atualizados da planilha!", "info");
+                                showToast("Dados sincronizados com sucesso!", "info");
                             }
-
+            
+                            // Renderiza a tela atual com os dados novos
                             if (currentView === 'home') renderHomeView();
                             else if (currentView === 'completed') renderCompletedView();
                             else if (currentView === 'details') renderDetailsView();
                             else if (currentView === 'reports') renderReportsView();
+                            
+                            return true;
                         }
-                        return true;
                     }
+                } catch (err) {
+                    if (!isSilent) console.warn("Erro ao buscar dados no celular:", err.message);
+                } finally {
+                    isSyncing = false;
                 }
-            } catch (err) {
-                if (!isSilent) console.warn("Erro ao carregar dados do Google Sheets:", err.message);
-            } finally {
-                isSyncing = false;
+                return false;
             }
-            return false;
-        }
 
         async function testSheetsConnection() {
             const urlInput = document.getElementById('sheetsScriptUrlInput').value.trim();
