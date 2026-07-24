@@ -1719,22 +1719,45 @@ async function handleLoginSubmit(event) {
                 dlAnchorElem.click();
                 showToast("Planilha CSV baixada!", "success");
             }
-        window.onload = async function() {
+     window.onload = async function() {
             checkUserSession();
-            await loadFromStorage();
-            if (!osDatabase || osDatabase.length === 0) {
-                seedInitialData();
+            
+            // 1. Carrega URL configurada
+            const savedUrl = localStorage.getItem(SHEETS_URL_KEY);
+            if (savedUrl) {
+                googleSheetsScriptUrl = savedUrl;
             }
+            updateSheetsIndicator();
+        
+            // 2. Busca PRIMEIRO os dados atualizados do Google Sheets
+            let pulledSuccessfully = false;
+            if (googleSheetsScriptUrl) {
+                pulledSuccessfully = await pullFromGoogleSheets(true);
+            }
+        
+            // 3. Se não tiver conexão ou a planilha estiver vazia pela primeira vez, lê do cache local
+            if (!pulledSuccessfully) {
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                if (storedData) {
+                    osDatabase = JSON.parse(storedData);
+                } else {
+                    // Apenas insere dados de teste se a planilha e o storage estiverem zerados
+                    seedInitialData();
+                }
+            }
+        
             renderHomeView();
-
+        
+            // 4. Inicia o Polling de atualização contínua
             if (googleSheetsScriptUrl) {
                 startAutoSyncPolling();
             }
-
+        
             window.addEventListener('focus', () => {
                 if (googleSheetsScriptUrl) pullFromGoogleSheets(true);
             });
-           document.addEventListener('visibilitychange', () => {
+        
+            document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' && googleSheetsScriptUrl) {
                     pullFromGoogleSheets(true);
                 }
