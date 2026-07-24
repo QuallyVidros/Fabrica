@@ -1732,7 +1732,7 @@ async function handleLoginSubmit(event) {
             window.addEventListener('focus', () => {
                 if (googleSheetsScriptUrl) pullFromGoogleSheets(true);
             });
-            document.addEventListener('visibilitychange', () => {
+           document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' && googleSheetsScriptUrl) {
                     pullFromGoogleSheets(true);
                 }
