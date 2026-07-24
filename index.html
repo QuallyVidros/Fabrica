@@ -1582,12 +1582,15 @@ async function handleLoginSubmit(event) {
         }
 
         async function pullFromGoogleSheets(isSilent = false) {
-                if (!googleSheetsScriptUrl || isSyncing) return false;
+                if (!googleSheetsScriptUrl) return false;
             
                 try {
                     isSyncing = true;
                     
-                    // redirect: 'follow' e cache: 'no-store' garantem que o celular não use dados velhos
+                    // Exibe feedback visual de carregamento na tela se não for silencioso
+                    if (!isSilent) showToast("Carregando dados da nuvem...", "info");
+            
+                    // 'redirect: follow' e 'cache: no-store' garantem que o celular puxe os dados mais recentes da planilha
                     const response = await fetch(googleSheetsScriptUrl, {
                         method: 'GET',
                         redirect: 'follow',
@@ -1596,17 +1599,13 @@ async function handleLoginSubmit(event) {
             
                     if (response.ok) {
                         const remoteData = await response.json();
+                        
+                        // Se retornar uma lista válida de ordens/dados
                         if (Array.isArray(remoteData)) {
+                            // Atualiza a memória da aplicação com os dados do Google Sheets
                             osDatabase = remoteData;
-                            
-                            // Salva a cópia mais recente no celular
-                            localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
             
-                            if (!isSilent) {
-                                showToast("Dados sincronizados com sucesso!", "info");
-                            }
-            
-                            // Renderiza a tela atual com os dados novos
+                            // Atualiza a visualização atual da tela com as informações da planilha
                             if (currentView === 'home') renderHomeView();
                             else if (currentView === 'completed') renderCompletedView();
                             else if (currentView === 'details') renderDetailsView();
@@ -1614,9 +1613,12 @@ async function handleLoginSubmit(event) {
                             
                             return true;
                         }
+                    } else {
+                        console.error("Erro na resposta da API Google Sheets:", response.status);
                     }
                 } catch (err) {
-                    if (!isSilent) console.warn("Erro ao buscar dados no celular:", err.message);
+                    console.error("Erro ao conectar com o Google Sheets:", err.message);
+                    if (!isSilent) showToast("Falha ao carregar dados da planilha. Verifique a conexão.", "error");
                 } finally {
                     isSyncing = false;
                 }
