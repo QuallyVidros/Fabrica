@@ -1230,7 +1230,7 @@ async function handleLoginSubmit(event) {
             stagesGrid.innerHTML = html;
         }
 
-       function updateItemStatus(osId, stageId, itemId, newStatus) {
+       async function updateItemStatus(osId, stageId, itemId, newStatus) {
                 if (currentUser && currentUser.nivel === 3) {
                     showToast("Seu usuário tem apenas permissão de visualização.", "error");
                     return;
@@ -1245,6 +1245,7 @@ async function handleLoginSubmit(event) {
                 const item = stage.items.find(i => i.id === itemId);
                 if (!item) return;
             
+                // 1. ATUALIZAÇÃO IMEDIATA NA TELA (UI)
                 item.status = newStatus;
                 
                 const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
@@ -1262,13 +1263,22 @@ async function handleLoginSubmit(event) {
                     item.completedBy = null;
                 }
             
-                // Salva no LocalStorage do navegador
+                // Atualiza a tela na hora para o usuário não sentir lentidão
+                renderDetailsView();
+            
+                // 2. SALVA LOCALMENTE
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
             
-                // MANDA APENAS A OS ATUALIZADA PARA O GOOGLE SHEETS
-                pushToGoogleSheets(os);
+                // 3. PAUSA O POLLING TEMPORARIAMENTE PARA EVITAR QUE A BUSCA SOBRESCREVA O ITEM
+                if (autoSyncTimer) clearInterval(autoSyncTimer);
             
-                renderDetailsView();
+                // 4. ENVIA PARA A PLANILHA E SÓ RETOMA O POLLING DEPOIS
+                try {
+                    await pushToGoogleSheets(os);
+                } finally {
+                    // Reinicia o polling após o envio ser concluído
+                    startAutoSyncPolling();
+                }
             }
 
         function renderReportsView() {
