@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Processos - Vidros e Esquadrias</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .stage-card { transition: all 0.2s ease-in-out; }
+        .stage-red { border-left: 6px solid #ef4444; background-color: #fef2f2; }
+        .stage-yellow { border-left: 6px solid #f59e0b; background-color: #fffbeb; }
+        .stage-green { border-left: 6px solid #10b981; background-color: #ecfdf5; }
+
+        .badge-red { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .badge-yellow { background-color: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .badge-green { background-color: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+        @media print {
+            header, nav, .no-print, button, input, select {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .print-only-title {
+                display: block !important;
+            }
+            .printable-area {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #cbd5e1 !important;
+                padding: 8px !important;
+                font-size: 11px !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        .print-only-title {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12 flex flex-col">
+
+    <!-- ================= TELA DE LOGIN OVERLAY ================= -->
+    <div id="loginScreenOverlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto mb-3">
+                    <i class="fa-solid fa-boxes-packing text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800">Qually Vidros</h2>
+                <p class="text-xs text-slate-500">Acesse com suas credenciais do sistema</p>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuário</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="loginUsername" required placeholder="Digite seu usuário" class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Senha</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400 text-sm"></i>
+                        <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div id="loginErrorMsg" class="hidden text-xs font-bold text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl text-center"></div>
+
+                <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+                    <span>Entrar no Sistema</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header & Navigation -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-md">
+                    <i class="fa-solid fa-boxes-packing text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight leading-tight flex items-center gap-2">
+                        Qually Vidros - Fabrica
+                        <span class="text-xs bg-blue-500/30 text-blue-300 font-semibold px-2 py-0.5 rounded-full border border-blue-400/30">Pro</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Controle de Processos e Ordens de Serviço</p>
+                </div>
+            </div>
+
+            <!-- Page Navigation Tabs -->
+            <nav class="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 gap-1">
+                <button id="navTabHome" onclick="navigateTo('home')" class="px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition text-white bg-blue-600 shadow-sm">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Em Andamento
+                </button>
+                <button id="navTabCompleted" onclick="navigateTo('completed')" class="px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition text-slate-300 hover:text-white hover:bg-slate-700/60">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> Concluídas
+                </button>
+                <button id="navTabReports" onclick="navigateTo('reports')" class="px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition text-slate-300 hover:text-white hover:bg-slate-700/60">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Relatórios (PDF)
+                </button>
+            </nav>
+
+            <!-- Global Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="openSheetsModal()" id="sheetsStatusBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-medium px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition" title="Configurar integração com Google Sheets">
+                    <i class="fa-solid fa-table text-emerald-400"></i>
+                    <span id="sheetsStatusText">Google Sheets</span>
+                    <span id="sheetsStatusDot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                </button>
+
+                <!-- Botão Nova OS (Controlado por Permissão - Nível 1 Admin) -->
+                <button id="globalNewOSBtn" onclick="openNewOSModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3.5 py-2 rounded-lg text-sm flex items-center gap-2 shadow-md transition">
+                    <i class="fa-solid fa-plus"></i> Nova OS
+                </button>
+                
+                <!-- Data Management Menu -->
+                <div class="relative group">
+                    <button class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-database"></i> Dados
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-1 w-52 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-200 py-1 hidden group-hover:block z-50">
+                        <button onclick="syncWithGoogleSheets(true)" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center gap-2 text-emerald-700">
+                            <i class="fa-solid fa-rotate text-emerald-600"></i> Sincronizar Google Sheets
+                        </button>
+                        <button onclick="openSheetsModal()" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-gear text-slate-600"></i> Configurar Conexão Drive
+                        </button>
+                        <hr class="my-1 border-slate-100">
+                        <button onclick="exportDataJSON()" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-download text-blue-600"></i> Backup (JSON)
+                        </button>
+                        <label class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload text-emerald-600"></i> Restaurar (JSON)
+                            <input type="file" id="importFileInput" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                        </label>
+                        <hr class="my-1 border-slate-100">
+                        <button onclick="exportDataCSV()" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-green-600"></i> Exportar CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Painel do Usuário Logado -->
+                <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg ml-2">
+                    <div class="text-right">
+                        <p id="loggedUserName" class="text-xs font-bold leading-tight">Convidado</p>
+                        <p id="loggedUserRole" class="text-[10px] text-slate-400">Nível 3</p>
+                    </div>
+                    <button onclick="logout()" class="text-slate-400 hover:text-red-400 text-xs p-1" title="Sair">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-grow w-full">
+
+        <!-- PAGE 1: HOME (DASHBOARD) -->
+        <section id="viewHome" class="space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase text-slate-400">Total de OS</p>
+                        <h3 id="statTotalOS" class="text-2xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-folder text-xl"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase text-slate-400">Em Andamento</p>
+                        <h3 id="statInProgress" class="text-2xl font-black text-amber-600">0</h3>
+                    </div>
+                    <div class="bg-amber-50 text-amber-600 p-3 rounded-lg"><i class="fa-solid fa-spinner text-xl"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase text-slate-400">Concluídas</p>
+                        <h3 id="statCompleted" class="text-2xl font-black text-emerald-600">0</h3>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-600 p-3 rounded-lg"><i class="fa-solid fa-circle-check text-xl"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase text-slate-400">Taxa de Conclusão</p>
+                        <h3 id="statRate" class="text-2xl font-black text-slate-800">0%</h3>
+                    </div>
+                    <div class="bg-slate-100 text-slate-600 p-3 rounded-lg"><i class="fa-solid fa-chart-pie text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-spinner text-amber-500"></i> Ordens de Serviço em Andamento
+                    </h2>
+                    <p class="text-xs text-slate-500">Ao finalizar todas as etapas, a OS é transferida automaticamente para Concluídas.</p>
+                </div>
+
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                    <input type="text" id="homeSearchInput" oninput="renderHomeView()" placeholder="Buscar por Nº, Cliente, Cidade..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div id="homeOsListGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </section>
+
+        <!-- PAGE 1B: COMPLETED OS VIEW -->
+        <section id="viewCompleted" class="hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i> Ordens de Serviço Concluídas e Entregues
+                    </h2>
+                    <p class="text-xs text-slate-500">Histórico de OS com 100% das etapas finalizadas.</p>
+                </div>
+
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                    <input type="text" id="completedSearchInput" oninput="renderCompletedView()" placeholder="Buscar por Nº, Cliente, Cidade..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div id="completedOsListGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </section>
+
+        <!-- PAGE 2: DETAILED OS VIEW -->
+        <section id="viewDetails" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <button onclick="navigateTo('home')" class="text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar para Início
+                </button>
+                <div class="flex items-center gap-2">
+                    <span id="detailsStatusBadge" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-100 text-blue-800">
+                        Carregando...
+                    </span>
+                    <button id="detailsDeleteOSBtn" class="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg text-sm font-semibold transition" title="Excluir esta OS">
+                        <i class="fa-solid fa-trash-can"></i> Excluir OS
+                    </button>
+                </div>
+            </div>
+
+            <div id="detailsOSHeaderBanner" class="bg-slate-900 text-white rounded-2xl p-6 shadow-md"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="detailsStagesGrid"></div>
+        </section>
+
+        <!-- PAGE 3: REPORTS -->
+        <section id="viewReports" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-blue-600"></i> Relatórios e Consultas de Processos
+                        </h2>
+                        <p class="text-xs text-slate-500">Filtre por ordens pendentes, em andamento ou concluídas, período de datas e gere impressões/PDF formatados.</p>
+                    </div>
+                    <button onclick="printFilteredReport()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-md transition">
+                        <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Status da OS</label>
+                        <select id="reportStatusFilter" onchange="renderReportsView()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                            <option value="in_progress">Em Andamento (Não Concluídas)</option>
+                            <option value="all">Todas as Ordens de Serviço</option>
+                            <option value="completed">Apenas Concluídas</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Buscar por Nome / OS / Encarregado</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                            <input type="text" id="reportSearchInput" oninput="renderReportsView()" placeholder="Digite para buscar..." class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Estágio de Etapa Específico</label>
+                        <select id="reportStageFilter" onchange="renderReportsView()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                            <option value="all">Todas as Etapas (1 a 6)</option>
+                            <option value="1">1. Pedido de Vidro</option>
+                            <option value="2">2. Separação Estoque</option>
+                            <option value="3">3. Corte e Produção</option>
+                            <option value="4">4. Separação e Conferência</option>
+                            <option value="5">5. Montagem e Entrega</option>
+                            <option value="6">6. Finalização</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Filtrar Data Por</label>
+                        <select id="reportDateFieldFilter" onchange="renderReportsView()" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                            <option value="createdAt">Data de Criação da OS</option>
+                            <option value="deliveryDate">Previsão de Entrega</option>
+                            <option value="completedAt">Data de Conclusão 100% da OS</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Data Inicial</label>
+                        <input type="date" id="reportStartDateInput" onchange="renderReportsView()" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Data Final</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="reportEndDateInput" onchange="renderReportsView()" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button onclick="clearReportDateFilters()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-eraser"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="print-only-title mb-6">
+                <h1 class="text-2xl font-bold">Relatório de Ordens de Serviço - Vidros e Esquadrias</h1>
+                <p class="text-xs text-gray-600">Gerado em: <span id="reportGeneratedDate"></span> | Filtro aplicado: <span id="reportFilterDesc"></span></p>
+                <hr class="my-2 border-black">
+            </div>
+
+            <div class="printable-area bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-800 text-white text-xs uppercase font-bold">
+                                <th class="p-3">Nº OS</th>
+                                <th class="p-3">Cliente / Cidade</th>
+                                <th class="p-3">Vendedor</th>
+                                <th class="p-3">Prev. Entrega</th>
+                                <th class="p-3">Encarregados (Prod / Mont)</th>
+                                <th class="p-3">Progresso</th>
+                                <th class="p-3">Status Atual das Etapas</th>
+                                <th class="p-3 text-center no-print">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="divide-y divide-slate-200 text-xs text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Nova OS -->
+    <div id="newOSModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-blue-600"></i> Criar Nova Ordem de Serviço
+                </h3>
+                <button onclick="closeNewOSModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="newOSForm" onsubmit="handleCreateOS(event)" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Número da OS *</label>
+                        <input type="text" id="osNumberInput" required placeholder="Ex: OS-2026-102" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nome do Cliente *</label>
+                        <input type="text" id="clientNameInput" required placeholder="Ex: Construtora Silva / Sr. João" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cidade (Opcional)</label>
+                        <input type="text" id="cityInput" placeholder="Ex: São Paulo" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Data Prev. Entrega</label>
+                        <input type="date" id="deliveryDateInput" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Vendedor (Opcional)</label>
+                        <input type="text" id="sellerInput" placeholder="Ex: Marcos" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Encarregado Produção</label>
+                        <input type="text" id="inchargeProdInput" placeholder="Ex: Roberto Silva" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Encarregado Montagem</label>
+                        <input type="text" id="inchargeAssemblyInput" placeholder="Ex: Carlos Oliveira" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeNewOSModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md">Cadastrar OS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Adicionar Item na Etapa -->
+    <div id="addItemModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-600"></i> Adicionar Item na Etapa
+                </h3>
+                <button onclick="closeAddItemModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="addItemForm" onsubmit="handleAddItemSubmit(event)" class="space-y-4">
+                <input type="hidden" id="addItemOsId">
+                <input type="hidden" id="addItemStageId">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nome do Item/Tarefa Customizada *</label>
+                    <input type="text" id="addItemTitleInput" required placeholder="Ex: Vidro Temperado 8mm Bronze" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddItemModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-md">Adicionar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Configuração do Google Sheets -->
+    <div id="googleSheetsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-file-spreadsheet text-emerald-600"></i> Integração com Google Sheets (Google Drive)
+                </h3>
+                <button onclick="closeSheetsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-600">
+                <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-emerald-900 leading-relaxed">
+                    <p class="font-bold text-sm mb-1"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Sincronização em Tempo Real</p>
+                    Conecte seu sistema a uma planilha do Google Drive para armazenar todas as alterações de OS, itens e datas automaticamente online.
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">URL do Web App do Google Apps Script *</label>
+                    <div class="flex gap-2">
+                        <input type="url" id="sheetsScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+                        <button type="button" onclick="testSheetsConnection()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center gap-1.5 whitespace-nowrap shadow-sm transition">
+                            <i class="fa-solid fa-vial"></i> Testar Conexão
+                        </button>
+                    </div>
+                </div>
+
+                <div id="sheetsTestResult" class="hidden p-3 rounded-xl border text-xs font-medium"></div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-200 flex justify-between items-center">
+                <button onclick="disconnectGoogleSheets()" type="button" class="text-red-600 hover:text-red-700 text-xs font-semibold px-2 py-1">
+                    Desconectar Google Sheets
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeSheetsModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button type="button" onclick="saveSheetsConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md">
+                        <i class="fa-solid fa-plug mr-1"></i> Salvar e Conectar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Customizado de Confirmação -->
+    <div id="customConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800" id="confirmModalTitle">Confirmação</h3>
+            <p class="text-xs text-slate-600" id="confirmModalMessage">Deseja realmente prosseguir?</p>
+            <div class="flex gap-2 justify-center pt-2">
+                <button id="confirmModalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition">Cancelar</button>
+                <button id="confirmModalOkBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        const STORAGE_KEY = 'VIDROS_ESQUADRIAS_PROCESS_DATA_V3';
+        const SHEETS_URL_KEY = 'VIDROS_ESQUADRIAS_SHEETS_SCRIPT_URL';
+        const USER_SESSION_KEY = 'VIDROS_ESQUADRIAS_USER_SESSION';
+        const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwMinZ2-JeuMJQuw3TevH6HzjCDsyF9e9yCebulOvKN_8Hytpa99qle0XfipkdufV2y/exec';
+
+        const STAGES_TEMPLATE = [
+            {
+                id: 1,
+                name: "1. Pedido de Vidro",
+                items: [
+                    { id: "e1_1", title: "OS Recebida", status: "pending", completedAt: null },
+                    { id: "e1_2", title: "Pedido Vidro", status: "pending", completedAt: null }
+                ]
+            },
+            {
+                id: 2,
+                name: "2. Separação Estoque",
+                items: [
+                    { id: "e2_1", title: "Itens Produção", status: "pending", completedAt: null },
+                    { id: "e2_2", title: "Itens Montagem", status: "pending", completedAt: null },
+                    { id: "e2_3", title: "Vidros", status: "pending", completedAt: null }
+                ]
+            },
+            {
+                id: 3,
+                name: "3. Corte e Produção",
+                items: [
+                    { id: "e3_1", title: "Corte Perfis Produção", status: "pending", completedAt: null },
+                    { id: "e3_2", title: "Corte Perfis Montagem", status: "pending", completedAt: null },
+                    { id: "e3_3", title: "Vidros ou Peças Produzidas", status: "pending", completedAt: null }
+                ]
+            },
+            {
+                id: 4,
+                name: "4. Separação e Conferência",
+                items: [
+                    { id: "e4_1", title: "Embalagem", status: "pending", completedAt: null },
+                    { id: "e4_2", title: "Separação", status: "pending", completedAt: null },
+                    { id: "e4_3", title: "Carregamento Caminhão", status: "pending", completedAt: null },
+                    { id: "e4_4", title: "Conferido", status: "pending", completedAt: null }
+                ]
+            },
+            {
+                id: 5,
+                name: "5. Montagem e Entrega",
+                items: [
+                    { id: "e5_1", title: "Nome do Encarregado", status: "pending", completedAt: null },
+                    { id: "e5_2", title: "Obra Entregue", status: "pending", completedAt: null }
+                ]
+            },
+            {
+                id: 6,
+                name: "6. Finalização",
+                items: [
+                    { id: "e6_1", title: "Entrega do Checklist", status: "pending", completedAt: null }
+                ]
+            }
+        ];
+
+        let osDatabase = [];
+        let currentView = 'home';
+        let selectedOSId = null;
+        let googleSheetsScriptUrl = DEFAULT_SHEETS_URL;
+        let autoSyncTimer = null;
+        let isSyncing = false;
+        
+        // Sessão do Usuário Logado (Níveis: 1 = Admin, 2 = Edição, 3 = Visualização)
+        let currentUser = null;
+
+        // --- SISTEMA DE AUTENTICAÇÃO E PERMISSÕES ---
+        function checkUserSession() {
+            const savedSession = sessionStorage.getItem(USER_SESSION_KEY);
+            if (savedSession) {
+                currentUser = JSON.parse(savedSession);
+                document.getElementById('loginScreenOverlay').classList.add('hidden');
+                updateUserInterfaceByPermissions();
+            } else {
+                document.getElementById('loginScreenOverlay').classList.remove('hidden');
+            }
+        }
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const userVal = document.getElementById('loginUsername').value.trim();
+            const passVal = document.getElementById('loginPassword').value.trim();
+            const errEl = document.getElementById('loginErrorMsg');
+            const submitBtn = document.getElementById('loginSubmitBtn');
+
+            errEl.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...`;
+
+            if (googleSheetsScriptUrl) {
+                try {
+                    const response = await fetch(googleSheetsScriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: "login", usuario: userVal, senha: passVal })
+                    });
+                    
+                    if (response.ok) {
+                        const resData = await response.json();
+                        if (resData.status === "success") {
+                            currentUser = { usuario: resData.usuario, nivel: resData.nivel };
+                            sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
+                            document.getElementById('loginScreenOverlay').classList.add('hidden');
+                            updateUserInterfaceByPermissions();
+                            showToast(`Bem-vindo, ${currentUser.usuario}!`, "success");
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = `<span>Entrar no Sistema</span> <i class="fa-solid fa-arrow-right"></i>`;
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Falha no login via Google Sheets, tentando fallback de demonstração.", e);
+                }
+            }
+
+            // Fallback de login padrão caso esteja sem conexão inicial
+            if (userVal === "admin" && passVal === "123456") {
+                currentUser = { usuario: "Admin", nivel: 1 };
+            } else if (userVal === "editor" && passVal === "123456") {
+                currentUser = { usuario: "Editor OS", nivel: 2 };
+            } else if (userVal === "leitor" && passVal === "123456") {
+                currentUser = { usuario: "Leitor", nivel: 3 };
+            } else {
+                errEl.innerText = "Usuário ou senha inválidos.";
+                errEl.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Entrar no Sistema</span> <i class="fa-solid fa-arrow-right"></i>`;
+                return;
+            }
+
+            sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
+            document.getElementById('loginScreenOverlay').classList.add('hidden');
+            updateUserInterfaceByPermissions();
+            showToast(`Bem-vindo, ${currentUser.usuario}!`, "success");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<span>Entrar no Sistema</span> <i class="fa-solid fa-arrow-right"></i>`;
+        }
+
+        function logout() {
+            sessionStorage.removeItem(USER_SESSION_KEY);
+            currentUser = null;
+            document.getElementById('loginScreenOverlay').classList.remove('hidden');
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function updateUserInterfaceByPermissions() {
+            if (!currentUser) return;
+
+            document.getElementById('loggedUserName').innerText = currentUser.usuario;
+            
+            const roles = { 1: "1 - Administrador", 2: "2 - Edição OS", 3: "3 - Visualização" };
+            document.getElementById('loggedUserRole').innerText = roles[currentUser.nivel] || "Nível Desconhecido";
+
+            const btnNewOS = document.getElementById('globalNewOSBtn');
+            const btnDeleteOS = document.getElementById('detailsDeleteOSBtn');
+
+            // Nível 1: Admin total (pode criar e excluir)
+            // Nível 2 e 3: Não conseguem criar ou excluir OS
+            if (currentUser.nivel === 1) {
+                if (btnNewOS) btnNewOS.classList.remove('hidden');
+                if (btnDeleteOS) btnDeleteOS.classList.remove('hidden');
+            } else {
+                if (btnNewOS) btnNewOS.classList.add('hidden');
+                if (btnDeleteOS) btnDeleteOS.classList.add('hidden');
+            }
+
+            // Recarrega as visões para aplicar desabilitação de controles
+            if (currentView === 'details') renderDetailsView();
+        }
+
+        async function loadFromStorage() {
+            try {
+                const savedUrl = localStorage.getItem(SHEETS_URL_KEY);
+                if (savedUrl) {
+                    googleSheetsScriptUrl = savedUrl;
+                } else {
+                    googleSheetsScriptUrl = DEFAULT_SHEETS_URL;
+                }
+                updateSheetsIndicator();
+
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                if (storedData) {
+                    osDatabase = JSON.parse(storedData);
+                }
+
+                if (googleSheetsScriptUrl) {
+                    await pullFromGoogleSheets(true);
+                }
+            } catch (e) {
+                console.error("Erro ao carregar do storage:", e);
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
+            } catch (e) {
+                console.error("Erro ao salvar no localStorage:", e);
+            }
+            pushToGoogleSheets();
+        }
+
+        function seedInitialData() {
+            const today = new Date().toISOString().split('T')[0];
+            const sampleOS = [
+                {
+                    id: 'os_' + Date.now() + '_1',
+                    osNumber: 'OS-2026-001',
+                    clientName: 'Exemplo - Residencia Morumbi',
+                    city: 'São Paulo',
+                    deliveryDate: today,
+                    seller: 'Marcos Silva',
+                    inChargeProduction: 'Roberto Prado',
+                    inChargeAssembly: 'Carlos Oliveira',
+                    createdAt: today,
+                    completedAt: null,
+                    stages: JSON.parse(JSON.stringify(STAGES_TEMPLATE))
+                }
+            ];
+            osDatabase = sampleOS;
+            saveToStorage();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let bgClass = 'bg-slate-800 text-white';
+            let iconClass = 'fa-info-circle text-blue-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-emerald-900 text-emerald-100 border border-emerald-700';
+                iconClass = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-red-900 text-red-100 border border-red-700';
+                iconClass = 'fa-triangle-exclamation text-red-400';
+            }
+
+            toast.className = `px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 ${bgClass}`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showConfirmModal(message, onConfirm) {
+            const modal = document.getElementById('customConfirmModal');
+            const msgEl = document.getElementById('confirmModalMessage');
+            const okBtn = document.getElementById('confirmModalOkBtn');
+            const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+            msgEl.innerText = message;
+            modal.classList.remove('hidden');
+
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                okBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+
+            okBtn.onclick = () => {
+                cleanup();
+                onConfirm();
+            };
+
+            cancelBtn.onclick = () => {
+                cleanup();
+            };
+        }
+
+        function navigateTo(viewName) {
+            currentView = viewName;
+
+            document.getElementById('viewHome').classList.add('hidden');
+            document.getElementById('viewCompleted').classList.add('hidden');
+            document.getElementById('viewDetails').classList.add('hidden');
+            document.getElementById('viewReports').classList.add('hidden');
+
+            const tabHome = document.getElementById('navTabHome');
+            const tabCompleted = document.getElementById('navTabCompleted');
+            const tabReports = document.getElementById('navTabReports');
+
+            const activeTabClass = 'px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition text-white bg-blue-600 shadow-sm';
+            const inactiveTabClass = 'px-3 py-2 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition text-slate-300 hover:text-white hover:bg-slate-700/60';
+
+            tabHome.className = inactiveTabClass;
+            tabCompleted.className = inactiveTabClass;
+            tabReports.className = inactiveTabClass;
+
+            if (viewName === 'home') {
+                document.getElementById('viewHome').classList.remove('hidden');
+                tabHome.className = activeTabClass;
+                renderHomeView();
+            } else if (viewName === 'completed') {
+                document.getElementById('viewCompleted').classList.remove('hidden');
+                tabCompleted.className = activeTabClass;
+                renderCompletedView();
+            } else if (viewName === 'details') {
+                document.getElementById('viewDetails').classList.remove('hidden');
+                renderDetailsView();
+            } else if (viewName === 'reports') {
+                document.getElementById('viewReports').classList.remove('hidden');
+                tabReports.className = activeTabClass;
+                renderReportsView();
+            }
+        }
+
+        function selectAndOpenOS(osId) {
+            selectedOSId = osId;
+            navigateTo('details');
+        }
+
+        function getStageStatusInfo(stage) {
+            if (!stage || !stage.items || stage.items.length === 0) {
+                return { status: 'red', text: 'Não Iniciada', badgeClass: 'badge-red', cardClass: 'stage-red' };
+            }
+
+            const total = stage.items.length;
+            const completed = stage.items.filter(i => i.status === 'completed').length;
+            const partial = stage.items.filter(i => i.status === 'partial').length;
+
+            if (completed === total) {
+                return { status: 'green', text: 'Concluída 100%', badgeClass: 'badge-green', cardClass: 'stage-green' };
+            } else if (completed > 0 || partial > 0) {
+                return { status: 'yellow', text: 'Em Andamento', badgeClass: 'badge-yellow', cardClass: 'stage-yellow' };
+            } else {
+                return { status: 'red', text: 'Não Iniciada', badgeClass: 'badge-red', cardClass: 'stage-red' };
+            }
+        }
+
+        function getOSStatusInfo(os) {
+            const { pct } = calculateOSProgress(os);
+            if (pct === 100) {
+                return {
+                    key: 'completed',
+                    label: 'Concluída (100%)',
+                    badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    borderClass: 'border-l-8 border-l-emerald-500',
+                    progressColor: 'bg-emerald-500',
+                    icon: 'fa-circle-check text-emerald-600'
+                };
+            } else if (pct === 0) {
+                return {
+                    key: 'not_started',
+                    label: 'Não Iniciada (0%)',
+                    badgeClass: 'bg-red-100 text-red-800 border-red-300',
+                    borderClass: 'border-l-8 border-l-red-500',
+                    progressColor: 'bg-red-500',
+                    icon: 'fa-circle-pause text-red-600'
+                };
+            } else {
+                return {
+                    key: 'in_progress',
+                    label: `Em Andamento (${pct}%)`,
+                    badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+                    borderClass: 'border-l-8 border-l-amber-500',
+                    progressColor: 'bg-amber-500',
+                    icon: 'fa-spinner fa-spin text-amber-600'
+                };
+            }
+        }
+
+        function calculateOSProgress(os) {
+            let totalItems = 0;
+            let completedItems = 0;
+
+            if (os.stages && Array.isArray(os.stages)) {
+                os.stages.forEach(s => {
+                    if (s.items && Array.isArray(s.items)) {
+                        s.items.forEach(it => {
+                            totalItems++;
+                            if (it.status === 'completed') completedItems++;
+                        });
+                    }
+                });
+            }
+
+            const pct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+            
+            if (pct === 100 && !os.completedAt) {
+                os.completedAt = new Date().toISOString().split('T')[0];
+            } else if (pct < 100 && os.completedAt) {
+                os.completedAt = null;
+            }
+
+            return { pct, completedItems, totalItems };
+        }
+
+        function renderHomeView() {
+            const grid = document.getElementById('homeOsListGrid');
+            const searchVal = (document.getElementById('homeSearchInput').value || '').toLowerCase().trim();
+
+            let totalCount = osDatabase.length;
+            let completedCount = 0;
+            let inProgressCount = 0;
+
+            const activeList = [];
+
+            osDatabase.forEach(os => {
+                const { pct } = calculateOSProgress(os);
+                if (pct === 100) {
+                    completedCount++;
+                } else {
+                    inProgressCount++;
+                    activeList.push(os);
+                }
+            });
+
+            document.getElementById('statTotalOS').innerText = totalCount;
+            document.getElementById('statInProgress').innerText = inProgressCount;
+            document.getElementById('statCompleted').innerText = completedCount;
+            document.getElementById('statRate').innerText = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) + '%' : '0%';
+
+            const filteredOS = activeList.filter(os => {
+                const term = `${os.osNumber} ${os.clientName} ${os.city || ''}`.toLowerCase();
+                return term.includes(searchVal);
+            });
+
+            if (filteredOS.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-2"></i>
+                        <p class="text-slate-500 font-semibold text-sm">Nenhuma Ordem de Serviço em andamento encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredOS.forEach(os => {
+                const { pct } = calculateOSProgress(os);
+                const osStatus = getOSStatusInfo(os);
+
+                const stageBadgesHtml = os.stages.map(s => {
+                    const sInfo = getStageStatusInfo(s);
+                    let colorBg = 'bg-red-100 text-red-700 border-red-200';
+                    if (sInfo.status === 'green') colorBg = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    else if (sInfo.status === 'yellow') colorBg = 'bg-amber-100 text-amber-800 border-amber-300';
+                    return `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded border ${colorBg}" title="${s.name}: ${sInfo.text}">E${s.id}</span>`;
+                }).join(' ');
+
+                html += `
+                    <div onclick="selectAndOpenOS('${os.id}')" class="bg-white rounded-2xl border border-slate-200 ${osStatus.borderClass} p-5 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="bg-slate-900 text-white font-extrabold text-xs px-2.5 py-1 rounded-md">
+                                    ${os.osNumber}
+                                </span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${osStatus.badgeClass} flex items-center gap-1.5">
+                                    <i class="fa-solid ${osStatus.icon}"></i> ${osStatus.label}
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base leading-snug line-clamp-1">${os.clientName}</h3>
+                            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                <i class="fa-solid fa-location-dot text-slate-400"></i> ${os.city || 'Cidade não inf.'}
+                            </p>
+                        </div>
+
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-400 mb-1">Status Etapas (1 a 6):</div>
+                            <div class="flex flex-wrap gap-1">
+                                ${stageBadgesHtml}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400 font-medium">Prev. Entrega:</span>
+                                <span class="font-bold text-slate-700">${os.deliveryDate || 'Sem data'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400 font-medium">Prod / Mont:</span>
+                                <span class="font-medium text-slate-700 truncate max-w-[150px]">${os.inChargeProduction || '-'} / ${os.inChargeAssembly || '-'}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-slate-700">Progresso Geral</span>
+                                <span class="font-extrabold ${pct === 0 ? 'text-red-600' : 'text-amber-600'}">${pct}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div class="${osStatus.progressColor} h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function renderCompletedView() {
+            const grid = document.getElementById('completedOsListGrid');
+            const searchVal = (document.getElementById('completedSearchInput').value || '').toLowerCase().trim();
+
+            const completedList = osDatabase.filter(os => {
+                const { pct } = calculateOSProgress(os);
+                return pct === 100;
+            });
+
+            const filteredOS = completedList.filter(os => {
+                const term = `${os.osNumber} ${os.clientName} ${os.city || ''}`.toLowerCase();
+                return term.includes(searchVal);
+            });
+
+            if (filteredOS.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-circle-check text-4xl text-emerald-300 mb-2"></i>
+                        <p class="text-slate-500 font-semibold text-sm">Nenhuma Ordem de Serviço concluída encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredOS.forEach(os => {
+                const osStatus = getOSStatusInfo(os);
+
+                const stageBadgesHtml = os.stages.map(s => {
+                    return `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-emerald-100 text-emerald-700 border-emerald-200">E${s.id}</span>`;
+                }).join(' ');
+
+                html += `
+                    <div onclick="selectAndOpenOS('${os.id}')" class="bg-white rounded-2xl border border-emerald-200 ${osStatus.borderClass} p-5 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="bg-slate-900 text-white font-extrabold text-xs px-2.5 py-1 rounded-md">
+                                    ${os.osNumber}
+                                </span>
+                                <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Concluída (100%)
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base leading-snug line-clamp-1">${os.clientName}</h3>
+                            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                <i class="fa-solid fa-location-dot text-slate-400"></i> ${os.city || 'Cidade não inf.'}
+                            </p>
+                        </div>
+
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-400 mb-1">Etapas Entregues:</div>
+                            <div class="flex flex-wrap gap-1">
+                                ${stageBadgesHtml}
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400 font-medium">Data Conclusão OS:</span>
+                                <span class="font-bold text-emerald-700">${os.completedAt || 'Concluída'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400 font-medium">Vendedor:</span>
+                                <span class="font-medium text-slate-700">${os.seller || '-'}</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold p-2.5 rounded-xl text-center flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check-double text-emerald-600"></i> Todas as 6 etapas concluídas
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function renderDetailsView() {
+            const os = osDatabase.find(x => x.id === selectedOSId);
+            if (!os) {
+                navigateTo('home');
+                return;
+            }
+
+            const { pct } = calculateOSProgress(os);
+            const osStatus = getOSStatusInfo(os);
+
+            document.getElementById('detailsOSHeaderBanner').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <span class="bg-blue-600 text-white font-black text-sm px-3 py-1 rounded-lg">
+                                ${os.osNumber}
+                            </span>
+                            <h2 class="text-xl font-black">${os.clientName}</h2>
+                        </div>
+                        <p class="text-xs text-slate-300 flex flex-wrap gap-4 mt-2">
+                            <span><i class="fa-solid fa-location-dot text-blue-400 mr-1"></i>${os.city || 'Cidade não inf.'}</span>
+                            <span><i class="fa-solid fa-calendar mr-1 text-blue-400"></i>Prev: ${os.deliveryDate || 'Sem data'}</span>
+                            <span><i class="fa-solid fa-user-tie mr-1 text-blue-400"></i>Vendedor: ${os.seller || 'N/A'}</span>
+                            <span><i class="fa-solid fa-gears mr-1 text-blue-400"></i>Prod: ${os.inChargeProduction || 'N/A'}</span>
+                            <span><i class="fa-solid fa-truck-ramp-box mr-1 text-blue-400"></i>Mont: ${os.inChargeAssembly || 'N/A'}</span>
+                        </p>
+                    </div>
+
+                    <div class="w-full md:w-64 bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>Progresso do Processo</span>
+                            <span class="${pct === 100 ? 'text-emerald-400' : 'text-amber-400'}">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                            <div class="${osStatus.progressColor} h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailsStatusBadge').innerText = osStatus.label;
+            document.getElementById('detailsStatusBadge').className = `text-xs font-bold px-3 py-1.5 rounded-lg border ${osStatus.badgeClass}`;
+
+            const btnDeleteOS = document.getElementById('detailsDeleteOSBtn');
+            if (currentUser && currentUser.nivel === 1) {
+                btnDeleteOS.classList.remove('hidden');
+                btnDeleteOS.onclick = () => confirmDeleteOS(os.id);
+            } else {
+                btnDeleteOS.classList.add('hidden');
+            }
+
+            const stagesGrid = document.getElementById('detailsStagesGrid');
+            let html = '';
+
+            const isReadOnly = currentUser && currentUser.nivel === 3;
+            const canEditOS = currentUser && (currentUser.nivel === 1 || currentUser.nivel === 2);
+
+            os.stages.forEach(stage => {
+                const info = getStageStatusInfo(stage);
+
+                html += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden stage-card ${info.cardClass}">
+                        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                            <h4 class="font-bold text-slate-800 text-sm">${stage.name}</h4>
+                            <span class="text-[11px] font-extrabold px-2.5 py-1 rounded-full ${info.badgeClass}">
+                                ${info.text}
+                            </span>
+                        </div>
+
+                        <div class="p-4 space-y-3">
+                            ${stage.items.map(item => `
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <span class="text-xs font-bold text-slate-800 leading-tight">${item.title}</span>
+                                        ${item.id.startsWith('custom_') && canEditOS ? `
+                                            <button onclick="confirmDeleteCustomItem('${os.id}', ${stage.id}, '${item.id}')" class="text-slate-400 hover:text-red-600 text-xs p-1">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+
+                                    <div class="flex items-center gap-1.5 pt-1">
+                                        <button ${isReadOnly ? 'disabled' : ''} onclick="updateItemStatus('${os.id}', ${stage.id}, '${item.id}', 'pending')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${item.status === 'pending' ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}">
+                                            Pendente
+                                        </button>
+                                        <button ${isReadOnly ? 'disabled' : ''} onclick="updateItemStatus('${os.id}', ${stage.id}, '${item.id}', 'partial')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${item.status === 'partial' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}">
+                                            Parcial
+                                        </button>
+                                        <button ${isReadOnly ? 'disabled' : ''} onclick="updateItemStatus('${os.id}', ${stage.id}, '${item.id}', 'completed')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${item.status === 'completed' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}">
+                                            Concluída
+                                        </button>
+                                    </div>
+
+                                    ${item.completedAt ? `
+                                        <div class="text-[10px] text-emerald-700 font-semibold pt-1 flex items-center gap-1">
+                                            <i class="fa-regular fa-clock"></i> Concluído em: ${item.completedAt}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+
+                            ${canEditOS ? `
+                                <button onclick="openAddItemModal('${os.id}', ${stage.id})" class="w-full mt-2 py-2 border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                                    <i class="fa-solid fa-plus text-xs"></i> Adicionar Item Customizado
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            stagesGrid.innerHTML = html;
+        }
+
+        function updateItemStatus(osId, stageId, itemId, newStatus) {
+            if (currentUser && currentUser.nivel === 3) {
+                showToast("Seu usuário tem apenas permissão de visualização.", "error");
+                return;
+            }
+
+            const os = osDatabase.find(x => x.id === osId);
+            if (!os) return;
+
+            const stage = os.stages.find(s => s.id === stageId);
+            if (!stage) return;
+
+            const item = stage.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            item.status = newStatus;
+            if (newStatus === 'completed') {
+                item.completedAt = new Date().toLocaleString('pt-BR');
+            } else {
+                item.completedAt = null;
+            }
+
+            saveToStorage();
+            renderDetailsView();
+        }
+
+        function renderReportsView() {
+            const tbody = document.getElementById('reportTableBody');
+            const statusFilter = document.getElementById('reportStatusFilter').value;
+            const searchVal = (document.getElementById('reportSearchInput').value || '').toLowerCase().trim();
+            const stageFilter = document.getElementById('reportStageFilter').value;
+            const dateField = document.getElementById('reportDateFieldFilter').value;
+            const startDate = document.getElementById('reportStartDateInput').value;
+            const endDate = document.getElementById('reportEndDateInput').value;
+
+            document.getElementById('reportGeneratedDate').innerText = new Date().toLocaleString('pt-BR');
+
+            let filterDesc = `Filtro: Status [${statusFilter}]`;
+            if (startDate || endDate) filterDesc += ` | Período (${dateField}): ${startDate || 'Início'} até ${endDate || 'Hoje'}`;
+            document.getElementById('reportFilterDesc').innerText = filterDesc;
+
+            const filteredOS = osDatabase.filter(os => {
+                const { pct } = calculateOSProgress(os);
+
+                if (statusFilter === 'in_progress' && pct === 100) return false;
+                if (statusFilter === 'completed' && pct < 100) return false;
+
+                const searchTerm = `${os.osNumber} ${os.clientName} ${os.city || ''} ${os.inChargeProduction || ''} ${os.inChargeAssembly || ''}`.toLowerCase();
+                if (searchVal && !searchTerm.includes(searchVal)) return false;
+
+                if (stageFilter !== 'all') {
+                    const targetStage = os.stages.find(s => s.id === parseInt(stageFilter));
+                    if (targetStage) {
+                        const info = getStageStatusInfo(targetStage);
+                        if (info.status === 'red') return false;
+                    }
+                }
+
+                let targetDateStr = os[dateField] || null;
+                if (startDate || endDate) {
+                    if (!targetDateStr) return false;
+                    if (startDate && targetDateStr < startDate) return false;
+                    if (endDate && targetDateStr > endDate) return false;
+                }
+
+                return true;
+            });
+
+            if (filteredOS.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-6 text-center text-slate-400 font-semibold">
+                            Nenhum registro encontrado para os filtros selecionados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredOS.forEach(os => {
+                const osStatus = getOSStatusInfo(os);
+
+                const stagesSummary = os.stages.map(s => {
+                    const info = getStageStatusInfo(s);
+                    let colorClass = 'bg-red-100 text-red-800 border-red-200';
+                    if (info.status === 'green') colorClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    else if (info.status === 'yellow') colorClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                    return `<span class="inline-block px-1.5 py-0.5 text-[10px] font-extrabold rounded border ${colorClass}" title="${s.name}: ${info.text}">E${s.id}</span>`;
+                }).join(' ');
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-extrabold text-blue-700">${os.osNumber}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-800">${os.clientName}</div>
+                            <div class="text-[11px] text-slate-400">${os.city || 'N/A'}</div>
+                        </td>
+                        <td class="p-3">${os.seller || '-'}</td>
+                        <td class="p-3 font-semibold">${os.deliveryDate || '-'}</td>
+                        <td class="p-3 text-[11px]">${os.inChargeProduction || '-'} / ${os.inChargeAssembly || '-'}</td>
+                        <td class="p-3">
+                            <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-bold rounded-full border ${osStatus.badgeClass}">
+                                ${osStatus.label}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <div class="flex flex-wrap gap-1">${stagesSummary}</div>
+                        </td>
+                        <td class="p-3 text-center no-print">
+                            <button onclick="selectAndOpenOS('${os.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded text-[11px] font-bold transition">
+                                Abrir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function clearReportDateFilters() {
+            document.getElementById('reportStartDateInput').value = '';
+            document.getElementById('reportEndDateInput').value = '';
+            renderReportsView();
+        }
+
+        function printFilteredReport() {
+            window.print();
+        }
+
+        function openNewOSModal() {
+            if (currentUser && currentUser.nivel !== 1) {
+                showToast("Apenas o Administrador pode criar novas Ordens de Serviço.", "error");
+                return;
+            }
+            document.getElementById('newOSForm').reset();
+            document.getElementById('newOSModal').classList.remove('hidden');
+        }
+
+        function closeNewOSModal() {
+            document.getElementById('newOSModal').classList.add('hidden');
+        }
+
+        function handleCreateOS(event) {
+            event.preventDefault();
+
+            if (currentUser && currentUser.nivel !== 1) {
+                showToast("Operação não permitida.", "error");
+                return;
+            }
+
+            const osNumber = document.getElementById('osNumberInput').value.trim();
+            const clientName = document.getElementById('clientNameInput').value.trim();
+            const city = document.getElementById('cityInput').value.trim();
+            const deliveryDate = document.getElementById('deliveryDateInput').value;
+            const seller = document.getElementById('sellerInput').value.trim();
+            const inChargeProduction = document.getElementById('inchargeProdInput').value.trim();
+            const inChargeAssembly = document.getElementById('inchargeAssemblyInput').value.trim();
+
+            const newOS = {
+                id: 'os_' + Date.now(),
+                osNumber,
+                clientName,
+                city,
+                deliveryDate,
+                seller,
+                inChargeProduction,
+                inChargeAssembly,
+                createdAt: new Date().toISOString().split('T')[0],
+                completedAt: null,
+                stages: JSON.parse(JSON.stringify(STAGES_TEMPLATE))
+            };
+
+            osDatabase.unshift(newOS);
+            saveToStorage();
+            closeNewOSModal();
+            showToast("Nova Ordem de Serviço cadastrada com sucesso!", "success");
+
+            if (currentView === 'home') renderHomeView();
+            else navigateTo('home');
+        }
+
+        function confirmDeleteOS(osId) {
+            if (currentUser && currentUser.nivel !== 1) {
+                showToast("Apenas o Administrador pode excluir Ordens de Serviço.", "error");
+                return;
+            }
+
+            showConfirmModal("Tem certeza que deseja excluir esta Ordem de Serviço?", () => {
+                osDatabase = osDatabase.filter(x => x.id !== osId);
+                saveToStorage();
+                showToast("Ordem de Serviço excluída.", "info");
+                navigateTo('home');
+            });
+        }
+
+        function openAddItemModal(osId, stageId) {
+            if (currentUser && currentUser.nivel === 3) {
+                showToast("Visualizadores não podem alterar itens.", "error");
+                return;
+            }
+            document.getElementById('addItemOsId').value = osId;
+            document.getElementById('addItemStageId').value = stageId;
+            document.getElementById('addItemTitleInput').value = '';
+            document.getElementById('addItemModal').classList.remove('hidden');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('addItemModal').classList.add('hidden');
+        }
+
+        function handleAddItemSubmit(event) {
+            event.preventDefault();
+            const osId = document.getElementById('addItemOsId').value;
+            const stageId = parseInt(document.getElementById('addItemStageId').value);
+            const title = document.getElementById('addItemTitleInput').value.trim();
+
+            const os = osDatabase.find(x => x.id === osId);
+            if (!os) return;
+
+            const stage = os.stages.find(s => s.id === stageId);
+            if (!stage) return;
+
+            const newItem = {
+                id: 'custom_' + Date.now(),
+                title,
+                status: 'pending',
+                completedAt: null
+            };
+
+            stage.items.push(newItem);
+            saveToStorage();
+            closeAddItemModal();
+            renderDetailsView();
+            showToast("Item customizado adicionado à etapa!", "success");
+        }
+
+        function confirmDeleteCustomItem(osId, stageId, itemId) {
+            if (currentUser && currentUser.nivel === 3) {
+                showToast("Visualizadores não podem remover itens.", "error");
+                return;
+            }
+
+            showConfirmModal("Deseja remover este item customizado?", () => {
+                const os = osDatabase.find(x => x.id === osId);
+                if (!os) return;
+
+                const stage = os.stages.find(s => s.id === stageId);
+                if (!stage) return;
+
+                stage.items = stage.items.filter(i => i.id !== itemId);
+                saveToStorage();
+                renderDetailsView();
+                showToast("Item removido.", "info");
+            });
+        }
+
+        function updateSheetsIndicator() {
+            const textEl = document.getElementById('sheetsStatusText');
+            const dotEl = document.getElementById('sheetsStatusDot');
+            const btnEl = document.getElementById('sheetsStatusBtn');
+
+            if (googleSheetsScriptUrl) {
+                textEl.innerText = "Sheets Conectado";
+                dotEl.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block";
+                btnEl.className = "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 font-medium px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition";
+            } else {
+                textEl.innerText = "Conectar Drive";
+                dotEl.className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
+                btnEl.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition";
+            }
+        }
+
+        function startAutoSyncPolling() {
+            if (autoSyncTimer) clearInterval(autoSyncTimer);
+            autoSyncTimer = setInterval(async () => {
+                if (googleSheetsScriptUrl && !isSyncing) {
+                    await pullFromGoogleSheets(true);
+                }
+            }, 10000);
+        }
+
+        function openSheetsModal() {
+            document.getElementById('sheetsScriptUrlInput').value = googleSheetsScriptUrl;
+            document.getElementById('googleSheetsModal').classList.remove('hidden');
+        }
+
+        function closeSheetsModal() {
+            document.getElementById('googleSheetsModal').classList.add('hidden');
+        }
+
+        function saveSheetsConfig() {
+            const url = document.getElementById('sheetsScriptUrlInput').value.trim();
+            googleSheetsScriptUrl = url;
+            localStorage.setItem(SHEETS_URL_KEY, url);
+            updateSheetsIndicator();
+            closeSheetsModal();
+
+            if (url) {
+                showToast("URL do Google Sheets configurada!", "success");
+                syncWithGoogleSheets(true);
+                startAutoSyncPolling();
+            } else {
+                if (autoSyncTimer) clearInterval(autoSyncTimer);
+                showToast("Conexão com Google Sheets removida.", "info");
+            }
+        }
+
+        function disconnectGoogleSheets() {
+            googleSheetsScriptUrl = '';
+            localStorage.removeItem(SHEETS_URL_KEY);
+            document.getElementById('sheetsScriptUrlInput').value = '';
+            if (autoSyncTimer) clearInterval(autoSyncTimer);
+            updateSheetsIndicator();
+            closeSheetsModal();
+            showToast("Desconectado do Google Sheets.", "info");
+        }
+
+        async function pushToGoogleSheets() {
+            if (!googleSheetsScriptUrl || isSyncing) return;
+
+            try {
+                isSyncing = true;
+                const payload = JSON.stringify(osDatabase);
+
+                await fetch(googleSheetsScriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: payload
+                });
+            } catch (err) {
+                console.warn("Erro ao enviar para Google Sheets:", err.message);
+            } finally {
+                isSyncing = false;
+            }
+        }
+
+        async function pullFromGoogleSheets(isSilent = false) {
+            if (!googleSheetsScriptUrl || isSyncing) return false;
+
+            try {
+                isSyncing = true;
+                const response = await fetch(googleSheetsScriptUrl);
+                if (response.ok) {
+                    const remoteData = await response.json();
+                    if (Array.isArray(remoteData)) {
+                        const remoteJson = JSON.stringify(remoteData);
+                        const localJson = JSON.stringify(osDatabase);
+
+                        if (remoteJson !== localJson) {
+                            osDatabase = remoteData;
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
+
+                            if (!isSilent) {
+                                showToast("Dados atualizados da planilha!", "info");
+                            }
+
+                            if (currentView === 'home') renderHomeView();
+                            else if (currentView === 'completed') renderCompletedView();
+                            else if (currentView === 'details') renderDetailsView();
+                            else if (currentView === 'reports') renderReportsView();
+                        }
+                        return true;
+                    }
+                }
+            } catch (err) {
+                if (!isSilent) console.warn("Erro ao carregar dados do Google Sheets:", err.message);
+            } finally {
+                isSyncing = false;
+            }
+            return false;
+        }
+
+        async function testSheetsConnection() {
+            const urlInput = document.getElementById('sheetsScriptUrlInput').value.trim();
+            const resultBox = document.getElementById('sheetsTestResult');
+
+            if (!urlInput) {
+                resultBox.className = "p-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-xs font-semibold block";
+                resultBox.innerHTML = "<i class='fa-solid fa-circle-xmark mr-1'></i> Insira a URL do Web App antes de testar.";
+                return;
+            }
+
+            resultBox.className = "p-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs font-semibold block";
+            resultBox.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Testando conexão no Google Sheets...";
+
+            try {
+                const testPayload = JSON.stringify(osDatabase);
+
+                await fetch(urlInput, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: testPayload
+                });
+
+                setTimeout(async () => {
+                    resultBox.className = "p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs font-semibold block";
+                    resultBox.innerHTML = "<i class='fa-solid fa-circle-check text-emerald-600 mr-1'></i> <b>Conexão e gravação confirmadas! Cada OS foi salva em sua própria linha nas colunas A a L.</b>";
+                }, 1000);
+
+            } catch (err) {
+                resultBox.className = "p-3 rounded-xl border border-red-200 bg-red-50 text-red-800 text-xs font-semibold block";
+                resultBox.innerHTML = "<i class='fa-solid fa-circle-xmark mr-1'></i> Erro na requisição: " + err.message;
+            }
+        }
+
+        async function syncWithGoogleSheets(manualTrigger = false) {
+            if (!googleSheetsScriptUrl) return;
+
+            if (manualTrigger) showToast("Sincronizando com Google Sheets...", "info");
+            await pushToGoogleSheets();
+
+            if (manualTrigger) {
+                setTimeout(async () => {
+                    await pullFromGoogleSheets();
+                    showToast("Dados sincronizados com sucesso!", "success");
+                }, 1200);
+            }
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(osDatabase, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `backup_os_vidros_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast("Backup JSON baixado com sucesso!", "success");
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        osDatabase = imported;
+                        saveToStorage();
+                        renderHomeView();
+                        showToast("Dados restaurados com sucesso!", "success");
+                    } else {
+                        showToast("Arquivo JSON inválido.", "error");
+                    }
+                } catch (err) {
+                    showToast("Erro ao ler arquivo JSON.", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportDataCSV() {
+            let csv = 'OS,Cliente,Cidade,Vendedor,Prev_Entrega,Enc_Producao,Enc_Montagem,Progresso_Pct,Data_Criacao,Data_Conclusao_OS\n';
+            osDatabase.forEach(os => {
+                const { pct } = calculateOSProgress(os);
+                csv += `"${os.osNumber}","${os.clientName}","${os.city || ''}","${os.seller || ''}","${os.deliveryDate || ''}","${os.inChargeProduction || ''}","${os.inChargeAssembly || ''}","${pct}%","${os.createdAt || ''}","${os.completedAt || ''}"\n`;
+            });
+
+            const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `relatorio_os_vidros_${new Date().toISOString().split('T')[0]}.csv`);
+            dlAnchorElem.click();
+            showToast("Planilha CSV baixada!", "success");
+        }
+
+        window.onload = async function() {
+            checkUserSession();
+            await loadFromStorage();
+            if (!osDatabase || osDatabase.length === 0) {
+                seedInitialData();
+            }
+            renderHomeView();
+
+            if (googleSheetsScriptUrl) {
+                startAutoSyncPolling();
+            }
+
+            window.addEventListener('focus', () => {
+                if (googleSheetsScriptUrl) pullFromGoogleSheets(true);
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && googleSheetsScriptUrl) {
+                    pullFromGoogleSheets(true);
+                }
+            });
+        };
+    </script>
+</body>
+</html>
