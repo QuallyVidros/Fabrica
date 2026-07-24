@@ -1209,11 +1209,11 @@ async function handleLoginSubmit(event) {
                                         </button>
                                     </div>
 
-                                    ${item.completedAt ? `
-                                        <div class="text-[10px] text-emerald-700 font-semibold pt-1 flex items-center gap-1">
-                                            <i class="fa-regular fa-clock"></i> Concluído em: ${item.completedAt}
-                                        </div>
-                                    ` : ''}
+                                   ${item.completedAt ? `
+                                    <div class="text-[10px] text-emerald-700 font-semibold pt-1 flex items-center gap-1">
+                                        <i class="fa-regular fa-clock"></i> Concluído em: ${item.completedAt} ${item.completedBy ? `por <b>${item.completedBy}</b>` : ''}
+                                    </div>
+                                ` : ''}
                                 </div>
                             `).join('')}
 
@@ -1230,28 +1230,40 @@ async function handleLoginSubmit(event) {
             stagesGrid.innerHTML = html;
         }
 
-        function updateItemStatus(osId, stageId, itemId, newStatus) {
-            if (currentUser && currentUser.nivel === 3) {
+       function updateItemStatus(osId, stageId, itemId, newStatus) {
+             if (currentUser && currentUser.nivel === 3) {
                 showToast("Seu usuário tem apenas permissão de visualização.", "error");
                 return;
             }
-
+        
             const os = osDatabase.find(x => x.id === osId);
             if (!os) return;
-
+        
             const stage = os.stages.find(s => s.id === stageId);
             if (!stage) return;
-
+        
             const item = stage.items.find(i => i.id === itemId);
             if (!item) return;
-
+        
             item.status = newStatus;
+            
+            // Obtém o nome do usuário logado no momento
+            const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
+        
             if (newStatus === 'completed') {
                 item.completedAt = new Date().toLocaleString('pt-BR');
+                item.completedBy = userName; // Registro individual do item
+                
+                // Se todas as etapas da OS forem concluídas, registra quem finalizou a OS inteira
+                const { pct } = calculateOSProgress(os);
+                if (pct === 100) {
+                    os.completedBy = userName;
+                }
             } else {
                 item.completedAt = null;
+                item.completedBy = null;
             }
-
+        
             saveToStorage();
             renderDetailsView();
         }
@@ -1686,20 +1698,19 @@ async function handleLoginSubmit(event) {
         }
 
         function exportDataCSV() {
-            let csv = 'OS,Cliente,Cidade,Vendedor,Prev_Entrega,Enc_Producao,Enc_Montagem,Progresso_Pct,Data_Criacao,Data_Conclusao_OS\n';
-            osDatabase.forEach(os => {
-                const { pct } = calculateOSProgress(os);
-                csv += `"${os.osNumber}","${os.clientName}","${os.city || ''}","${os.seller || ''}","${os.deliveryDate || ''}","${os.inChargeProduction || ''}","${os.inChargeAssembly || ''}","${pct}%","${os.createdAt || ''}","${os.completedAt || ''}"\n`;
-            });
-
-            const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `relatorio_os_vidros_${new Date().toISOString().split('T')[0]}.csv`);
-            dlAnchorElem.click();
-            showToast("Planilha CSV baixada!", "success");
-        }
-
+            let csv = 'OS,Cliente,Cidade,Vendedor,Prev_Entrega,Enc_Producao,Enc_Montagem,Progresso_Pct,Data_Criacao,Data_Conclusao_OS,Concluido_Por\n';
+                osDatabase.forEach(os => {
+                    const { pct } = calculateOSProgress(os);
+                    csv += `"${os.osNumber}","${os.clientName}","${os.city || ''}","${os.seller || ''}","${os.deliveryDate || ''}","${os.inChargeProduction || ''}","${os.inChargeAssembly || ''}","${pct}%","${os.createdAt || ''}","${os.completedAt || ''}","${os.completedBy || ''}"\n`;
+                });
+            
+                const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+                const dlAnchorElem = document.createElement('a');
+                dlAnchorElem.setAttribute("href", dataStr);
+                dlAnchorElem.setAttribute("download", `relatorio_os_vidros_${new Date().toISOString().split('T')[0]}.csv`);
+                dlAnchorElem.click();
+                showToast("Planilha CSV baixada!", "success");
+            }
         window.onload = async function() {
             checkUserSession();
             await loadFromStorage();
