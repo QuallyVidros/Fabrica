@@ -259,13 +259,13 @@
 
         <!-- PAGE 2: DETAILED OS VIEW -->
         <section id="viewDetails" class="hidden space-y-6">
-           <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
     <button onclick="navigateTo('home')" class="text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg transition">
         <i class="fa-solid fa-arrow-left"></i> Voltar para Início
     </button>
     <div class="flex items-center gap-2">
-        <!-- BOTÃO SALVAR ALTERAÇÕES NA PLANILHA -->
-        <button id="saveChangesBtn" onclick="saveAllOSChanges()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-md">
+        <!-- BOTÃO SALVAR ALTERAÇÕES (Inicia hidden e é exibido via JS apenas para Nível 1 e 2) -->
+        <button id="saveChangesBtn" onclick="saveAllOSChanges()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-md">
             <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
         </button>
 
@@ -1168,14 +1168,18 @@ async function handleLoginSubmit(event) {
             document.getElementById('detailsStatusBadge').innerText = osStatus.label;
             document.getElementById('detailsStatusBadge').className = `text-xs font-bold px-3 py-1.5 rounded-lg border ${osStatus.badgeClass}`;
 
-           // Ativar/Esconder botão de editar por permissão
+          // Ativar/Esconder botão de salvar e editar conforme nível de permissão
+            const btnSaveChanges = document.getElementById('saveChangesBtn');
             const btnEditOS = document.getElementById('detailsEditOSBtn');
-            if (btnEditOS) {
-                if (currentUser && (currentUser.nivel === 1 || currentUser.nivel === 2)) {
-                    btnEditOS.classList.remove('hidden');
-                } else {
-                    btnEditOS.classList.add('hidden');
-                }
+            
+            // Nível 1 (Admin) e Nível 2 (Editor) podem Salvar e Editar
+            if (currentUser && (currentUser.nivel === 1 || currentUser.nivel === 2)) {
+                if (btnSaveChanges) btnSaveChanges.classList.remove('hidden');
+                if (btnEditOS) btnEditOS.classList.remove('hidden');
+            } else {
+                // Nível 3 (Leitor/Visualização) oculta ambos os botões
+                if (btnSaveChanges) btnSaveChanges.classList.add('hidden');
+                if (btnEditOS) btnEditOS.classList.add('hidden');
             }
             const btnDeleteOS = document.getElementById('detailsDeleteOSBtn');
             if (currentUser && currentUser.nivel === 1) {
