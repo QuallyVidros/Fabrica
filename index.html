@@ -1549,7 +1549,7 @@ function handleCreateOS(event) {
                 if (googleSheetsScriptUrl && !isSyncing) {
                     await pullFromGoogleSheets(true);
                 }
-            }, 5000); // 5000ms = 5 segundos
+            }, 15000); // 15000ms = 15 segundos
         }
 
         function openSheetsModal() {
