@@ -1230,56 +1230,60 @@ async function handleLoginSubmit(event) {
             stagesGrid.innerHTML = html;
         }
 
-       async function updateItemStatus(osId, stageId, itemId, newStatus) {
-                if (currentUser && currentUser.nivel === 3) {
-                    showToast("Seu usuário tem apenas permissão de visualização.", "error");
-                    return;
-                }
-            
-                const os = osDatabase.find(x => x.id === osId);
-                if (!os) return;
-            
-                const stage = os.stages.find(s => s.id === stageId);
-                if (!stage) return;
-            
-                const item = stage.items.find(i => i.id === itemId);
-                if (!item) return;
-            
-                // 1. ATUALIZAÇÃO IMEDIATA NA TELA (UI)
-                item.status = newStatus;
-                
-                const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
-            
-                if (newStatus === 'completed') {
-                    item.completedAt = new Date().toLocaleString('pt-BR');
-                    item.completedBy = userName;
-                    
-                    const { pct } = calculateOSProgress(os);
-                    if (pct === 100) {
-                        os.completedBy = userName;
-                    }
-                } else {
-                    item.completedAt = null;
-                    item.completedBy = null;
-                }
-            
-                // Atualiza a tela na hora para o usuário não sentir lentidão
-                renderDetailsView();
-            
-                // 2. SALVA LOCALMENTE
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
-            
-                // 3. PAUSA O POLLING TEMPORARIAMENTE PARA EVITAR QUE A BUSCA SOBRESCREVA O ITEM
-                if (autoSyncTimer) clearInterval(autoSyncTimer);
-            
-                // 4. ENVIA PARA A PLANILHA E SÓ RETOMA O POLLING DEPOIS
-                try {
-                    await pushToGoogleSheets(os);
-                } finally {
-                    // Reinicia o polling após o envio ser concluído
-                    startAutoSyncPolling();
-                }
+      async function updateItemStatus(osId, stageId, itemId, newStatus) {
+            if (currentUser && currentUser.nivel === 3) {
+                showToast("Seu usuário tem apenas permissão de visualização.", "error");
+                return;
             }
+
+            const os = osDatabase.find(x => x.id === osId);
+            if (!os) return;
+
+            const stage = os.stages.find(s => s.id === stageId);
+            if (!stage) return;
+
+            const item = stage.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            // 1. PAUSA O POLLING IMEDIATAMENTE PARA EVITAR ATUALIZAÇÃO CONCORRENTE
+            if (autoSyncTimer) {
+                clearInterval(autoSyncTimer);
+                autoSyncTimer = null;
+            }
+
+            // 2. ATUALIZAÇÃO LOCAL NA MEMÓRIA E TELA (UI OTIMISTA)
+            item.status = newStatus;
+            const userName = (currentUser && currentUser.usuario) ? currentUser.usuario : 'Desconhecido';
+
+            if (newStatus === 'completed') {
+                item.completedAt = new Date().toLocaleString('pt-BR');
+                item.completedBy = userName;
+                
+                const { pct } = calculateOSProgress(os);
+                if (pct === 100) {
+                    os.completedBy = userName;
+                }
+            } else {
+                item.completedAt = null;
+                item.completedBy = null;
+            }
+
+            // Renderiza as alterações na tela imediatamente
+            renderDetailsView();
+
+            // Salva no armazenamento local do navegador
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(osDatabase));
+
+            // 3. ENVIA PARA A PLANILHA AGUARDANDO A CONCLUSÃO (AWAIT)
+            try {
+                await pushToGoogleSheets(os);
+            } catch (err) {
+                console.error("Erro ao salvar alteração:", err);
+            } finally {
+                // 4. SÓ REINICIA O TIMER DE 5 SEGUNDOS DEPOIS QUE O ENVIO TERMINOU
+                startAutoSyncPolling();
+            }
+        }
 
         function renderReportsView() {
             const tbody = document.getElementById('reportTableBody');
